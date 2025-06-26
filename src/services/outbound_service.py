@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 from livekit import api
 from loguru import logger
-from ..utils.config import config
+from utils.config import config
 
 class OutboundCallService:
     def __init__(self):

@@ -4,7 +4,7 @@ from elevenlabs.client import AsyncElevenLabs
 from elevenlabs import Voice, VoiceSettings
 import openai
 from loguru import logger
-from ..utils.config import config
+from utils.config import config
 
 class UltraFastTTSService:
     def __init__(self):

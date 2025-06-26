@@ -2,7 +2,7 @@ import asyncio
 from typing import AsyncGenerator, Optional
 from groq import AsyncGroq
 from loguru import logger
-from ..utils.config import config
+from utils.config import config
 
 class GroqSTTService:
     def __init__(self):
