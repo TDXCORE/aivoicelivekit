@@ -7,7 +7,7 @@ load_dotenv()
 
 class Config(BaseSettings):
     # LiveKit Configuration
-    livekit_url: str = Field(default="wss://6jf4gz4gbna.livekit.cloud", env="LIVEKIT_URL")
+    livekit_url: str = Field(default="wss://forceapp-jaadrt7a.livekit.cloud", env="LIVEKIT_URL")
     livekit_api_key: str = Field(env="LIVEKIT_API_KEY")
     livekit_api_secret: str = Field(env="LIVEKIT_API_SECRET")
     

@@ -6,9 +6,11 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     region: oregon
+    buildCommand: "echo 'Build completed'"
+    startCommand: "python src/main.py"
     envVars:
       - key: LIVEKIT_URL
-        value: wss://6jf4gz4gbna.livekit.cloud
+        value: wss://forceapp-jaadrt7a.livekit.cloud
       - key: LIVEKIT_API_KEY
         sync: false
       - key: LIVEKIT_API_SECRET
@@ -62,4 +64,3 @@ services:
     scaling:
       minInstances: 1
       maxInstances: 3
-    healthCheckPath: /health

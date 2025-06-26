@@ -19,9 +19,4 @@ RUN mkdir -p logs
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8080
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
-
-CMD ["python", "main.py"]
+CMD ["python", "src/main.py"]
