@@ -9,9 +9,9 @@ from livekit.plugins import openai, silero
 import numpy as np
 from loguru import logger
 
-from ..services.groq_service import GroqSTTService, GroqLLMService
-from ..services.tts_service import UltraFastTTSService
-from ..utils.config import config
+from services.groq_service import GroqSTTService, GroqLLMService
+from services.tts_service import UltraFastTTSService
+from utils.config import config
 
 class GroqSTTAdapter(StreamAdapter):
     def __init__(self):
