@@ -2,9 +2,9 @@
 import asyncio
 import logging
 from livekit.agents import WorkerOptions, cli
-from src.agent.voice_agent import entrypoint
-from src.utils.config import config
-from src.utils.logger import setup_logger
+from agent.voice_agent import entrypoint
+from utils.config import config
+from utils.logger import setup_logger
 
 def main():
     setup_logger()
