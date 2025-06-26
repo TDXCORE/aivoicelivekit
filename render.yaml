@@ -7,7 +7,7 @@ services:
     dockerContext: .
     region: oregon
     buildCommand: "echo 'Build completed'"
-    startCommand: "python src/main.py"
+    startCommand: "python src/main.py start"
     envVars:
       - key: LIVEKIT_URL
         value: wss://forceapp-jaadrt7a.livekit.cloud
