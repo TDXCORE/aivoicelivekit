@@ -66,11 +66,13 @@ class VoiceAgent:
         )
         
         self.voice_assistant = None
+        self.conversation_started = False
+        self.chat_history = []
         
     async def on_participant_connected(self, participant: rtc.RemoteParticipant):
         logger.info(f"Participant connected: {participant.identity}")
         
-        # Create a basic voice assistant session
+        # Create a voice assistant session
         self.voice_assistant = {
             'vad': self.vad,
             'stt': self.groq_stt,
@@ -78,42 +80,133 @@ class VoiceAgent:
             'tts': self.fast_tts,
             'active': True
         }
-        logger.info("Voice assistant started for participant")
+        
+        # Initialize conversation with Laura's greeting
+        self.chat_history = [
+            {"role": "system", "content": config.system_prompt},
+            {"role": "assistant", "content": "¡Hola! Soy Laura de TDX. Ayudo a líderes empresariales con retos tecnológicos como atención lenta, sobrecarga operativa y necesidad de innovar rápido. ¿Alguno de estos temas resuena contigo?"}
+        ]
+        
+        # Send initial greeting
+        await self.send_initial_greeting()
+        logger.info("Voice assistant started for participant with Laura SDR greeting")
+    
+    async def send_initial_greeting(self):
+        """Send Laura's initial greeting"""
+        try:
+            greeting = "¡Hola! Soy Laura de TDX. Ayudo a líderes empresariales con retos tecnológicos como atención lenta, sobrecarga operativa y necesidad de innovar rápido. ¿Alguno de estos temas resuena contigo?"
+            
+            # Generate TTS for greeting
+            audio_frame = await self.fast_tts.synthesize(text=greeting)
+            if audio_frame:
+                logger.info("Laura's greeting generated successfully")
+                # Note: In a full implementation, you'd publish this audio to the room
+                # For now, we log that the greeting was prepared
+            
+        except Exception as e:
+            logger.error(f"Error generating initial greeting: {e}")
     
     async def on_participant_disconnected(self, participant: rtc.RemoteParticipant):
         logger.info(f"Participant disconnected: {participant.identity}")
         if self.voice_assistant:
             self.voice_assistant['active'] = False
             self.voice_assistant = None
+            self.conversation_started = False
+            self.chat_history = []
     
     async def handle_audio_stream(self, audio_track: rtc.AudioTrack):
-        logger.info("Starting audio stream handling")
+        logger.info("Starting audio stream handling for Laura SDR")
         
         async for frame in audio_track:
             if self.voice_assistant and self.voice_assistant.get('active'):
-                # Process audio frame with basic voice assistant logic
-                logger.debug("Processing audio frame")
+                try:
+                    # Process audio with VAD
+                    vad_result = await self.vad.detect(frame)
+                    
+                    if vad_result.speech_detected:
+                        logger.info("Speech detected, processing with STT")
+                        
+                        # Transcribe audio
+                        text = await self.groq_stt.recognize(buffer=frame, language="es")
+                        
+                        if text and text.strip():
+                            logger.info(f"User said: {text}")
+                            
+                            # Add user message to chat history
+                            self.chat_history.append({"role": "user", "content": text})
+                            
+                            # Generate Laura's response
+                            response = await self.generate_laura_response(text)
+                            
+                            if response:
+                                logger.info(f"Laura responds: {response}")
+                                
+                                # Add Laura's response to chat history
+                                self.chat_history.append({"role": "assistant", "content": response})
+                                
+                                # Generate and send TTS
+                                await self.send_tts_response(response)
+                
+                except Exception as e:
+                    logger.error(f"Error processing audio frame: {e}")
+    
+    async def generate_laura_response(self, user_input: str) -> str:
+        """Generate Laura SDR's response using Groq LLM"""
+        try:
+            # Prepare context for Laura
+            context = self.chat_history + [{"role": "user", "content": user_input}]
+            
+            # Generate response using Groq LLM
+            response_chunks = []
+            async for chunk in self.groq_llm.chat(chat_ctx=context):
+                response_chunks.append(chunk)
+            
+            response = "".join(response_chunks).strip()
+            return response if response else "Disculpa, ¿podrías repetir eso?"
+            
+        except Exception as e:
+            logger.error(f"Error generating Laura's response: {e}")
+            return "Disculpa, tuve un problema técnico. ¿Podrías repetir tu pregunta?"
+    
+    async def send_tts_response(self, text: str):
+        """Generate and send TTS response"""
+        try:
+            audio_frame = await self.fast_tts.synthesize(text=text)
+            if audio_frame:
+                logger.info("TTS response generated successfully")
+                # Note: In a full implementation, you'd publish this audio to the room
+                
+        except Exception as e:
+            logger.error(f"Error generating TTS response: {e}")
 
 async def entrypoint(ctx: JobContext):
     logger.info(f"Connecting to room: {ctx.room.name}")
+    
+    # Check if this is a SIP call room (created by dispatch rule)
+    if ctx.room.name.startswith('call-'):
+        logger.info(f"Detected SIP call room: {ctx.room.name}")
+    
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     
     agent = VoiceAgent()
     
     @ctx.room.on("participant_connected")
     def on_participant_connected(participant: rtc.RemoteParticipant):
+        logger.info(f"Participant connected to room {ctx.room.name}: {participant.identity}")
         asyncio.create_task(agent.on_participant_connected(participant))
     
     @ctx.room.on("participant_disconnected") 
     def on_participant_disconnected(participant: rtc.RemoteParticipant):
+        logger.info(f"Participant disconnected from room {ctx.room.name}: {participant.identity}")
         asyncio.create_task(agent.on_participant_disconnected(participant))
     
     @ctx.room.on("track_subscribed")
     def on_track_subscribed(track: rtc.Track, publication: rtc.TrackPublication, participant: rtc.RemoteParticipant):
         if track.kind == rtc.TrackKind.KIND_AUDIO:
+            logger.info(f"Audio track subscribed from {participant.identity}")
             asyncio.create_task(agent.handle_audio_stream(track))
     
-    logger.info("Voice agent initialized and listening for participants")
+    logger.info(f"Voice agent initialized and listening for participants in room: {ctx.room.name}")
 
 if __name__ == "__main__":
     cli.run_app(

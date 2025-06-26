@@ -23,7 +23,7 @@ def main():
             ws_url=config.livekit_url,
             api_key=config.livekit_api_key,
             api_secret=config.livekit_api_secret,
-            worker_type=WorkerType.ROOM
+            worker_type="room"
         )
     )
 

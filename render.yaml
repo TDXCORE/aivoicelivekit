@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: livekit-voice-agent
     runtime: docker
     plan: starter
