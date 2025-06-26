@@ -118,4 +118,4 @@ INBOUND_TRUNK_ID=ST_62xofSEmFyRe
 
 - **Inbound Number**: +18632190153
 - **SIP URI**: 6jf4gz4gbna.sip.livekit.cloud
-- **API Endpoint**: `/make-call` for outbound calls
+- **API Endpoint**: `/make-call` for outbound calls# Force redeploy Thu Jun 26 19:59:48 UTC 2025
